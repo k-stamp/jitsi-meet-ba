@@ -110,6 +110,7 @@ export const MAIN_TOOLBAR_BUTTONS_PRIORITY = [
     'linktosalesforce',
     'sharedvideo',
     'shareaudio',
+    'sound',
     'noisesuppression',
     'whiteboard',
     'etherpad',
