@@ -166,3 +166,13 @@ export const TOGGLE_TOOLBOX_VISIBLE = 'TOGGLE_TOOLBOX_VISIBLE';
  * }
  */
 export const SET_TOOLBOX_SHIFT_UP = 'SET_TOOLBOX_SHIFT_UP';
+
+/**
+ * The type of (redux) action to set the sound configuration option.
+ *
+ * {
+ *     type: SET_SOUND_OPTION,
+ *     soundOption: string
+ * }
+ */
+export const SET_SOUND_OPTION = 'SET_SOUND_OPTION';

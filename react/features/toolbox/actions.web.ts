@@ -11,7 +11,8 @@ import {
     SET_OVERFLOW_DRAWER,
     SET_OVERFLOW_MENU_VISIBLE,
     SET_TOOLBAR_HOVERED,
-    SET_TOOLBOX_TIMEOUT
+    SET_TOOLBOX_TIMEOUT,
+    SET_SOUND_OPTION
 } from './actionTypes';
 import { setToolboxVisible } from './actions.web';
 import { getToolbarTimeout } from './functions.web';
@@ -276,5 +277,20 @@ export function closeOverflowMenuIfOpen() {
         const { overflowMenuVisible } = getState()['features/toolbox'];
 
         overflowMenuVisible && dispatch(setOverflowMenuVisible(false));
+    };
+}
+
+/**
+ * Sets the sound configuration option.
+ *
+ * @param {string} soundOption - The sound option to set ('default', 'stereopanner', 'equalpower', 'hrtf').
+ * @returns {Function}
+ */
+export function setSoundOption(soundOption: string) {
+    return (dispatch: IStore['dispatch']) => {
+        dispatch({
+            type: SET_SOUND_OPTION,
+            soundOption
+        });
     };
 }

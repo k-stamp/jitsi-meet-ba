@@ -1,3 +1,5 @@
+import { AnyAction } from 'redux';
+
 import ReducerRegistry from '../base/redux/ReducerRegistry';
 import { set } from '../base/redux/functions';
 
@@ -16,7 +18,8 @@ import {
     SET_TOOLBOX_SHIFT_UP,
     SET_TOOLBOX_TIMEOUT,
     SET_TOOLBOX_VISIBLE,
-    TOGGLE_TOOLBOX_VISIBLE
+    TOGGLE_TOOLBOX_VISIBLE,
+    SET_SOUND_OPTION
 } from './actionTypes';
 import { NATIVE_THRESHOLDS, THRESHOLDS } from './constants';
 import { IMainToolbarButtonThresholds, NOTIFY_CLICK_MODE } from './types';
@@ -105,7 +108,9 @@ const INITIAL_STATE = {
      *
      * @type {boolean}
      */
-    visible: false
+    visible: false,
+
+    soundOption: 'default'
 };
 
 export interface IToolboxState {
@@ -122,11 +127,12 @@ export interface IToolboxState {
     timeoutID?: number | null;
     toolbarButtons: Array<string>;
     visible: boolean;
+    soundOption: string;
 }
 
 ReducerRegistry.register<IToolboxState>(
     'features/toolbox',
-    (state = INITIAL_STATE, action): IToolboxState => {
+    (state = INITIAL_STATE, action: AnyAction): IToolboxState => {
         switch (action.type) {
         case CLEAR_TOOLBOX_TIMEOUT:
             return {
@@ -209,6 +215,12 @@ ReducerRegistry.register<IToolboxState>(
 
         case TOGGLE_TOOLBOX_VISIBLE:
             return set(state, 'visible', !state.visible);
+
+        case SET_SOUND_OPTION:
+            return {
+                ...state,
+                soundOption: action.soundOption
+            };
         }
 
         return state;

@@ -3,7 +3,7 @@ import { WithTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
-import { IReduxState } from '../../../app/types';
+import { IReduxState, IStore } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import { IconArrowUp, IconVolumeUp } from '../../../base/icons/svg';
 import Popover from '../../../base/popover/components/Popover.web';
@@ -14,6 +14,7 @@ import ContextMenu from '../../../base/ui/components/web/ContextMenu';
 import ContextMenuItem from '../../../base/ui/components/web/ContextMenuItem';
 import ContextMenuItemGroup from '../../../base/ui/components/web/ContextMenuItemGroup';
 import logger from '../logger';
+import { setSoundOption } from '../../actions.web';
 
 const OPTIONS = ['default', 'stereopanner', 'equalpower', 'hrtf'];
 
@@ -22,6 +23,16 @@ interface IProps extends WithTranslation, AbstractButtonProps {
      * The popup placement enum value.
      */
     popupPlacement: string;
+
+    /**
+     * The currently selected sound option.
+     */
+    _soundOption?: string;
+
+    /**
+     * Dispatches setSoundOption action.
+     */
+    dispatch: IStore['dispatch'];
 }
 
 const useStyles = makeStyles()(() => {
@@ -48,20 +59,25 @@ class SoundIconButton extends AbstractButton<IProps> {
     override tooltip = 'toolbar.sound';
 }
 
-function SoundSettingsPopup({ children, popupPlacement, t }: { children: React.ReactNode; popupPlacement: string; t: Function }) {
+function SoundSettingsPopup({ children, popupPlacement, t, soundOption, onSoundOptionChange }: { 
+    children: React.ReactNode; 
+    popupPlacement: string; 
+    t: Function;
+    soundOption: string;
+    onSoundOptionChange: (option: string) => void;
+}) {
     const [ isOpen, setIsOpen ] = useState(false);
-    const [ option, setOption ] = useState('default');
     const { classes, cx } = useStyles();
 
     const onOpen = useCallback(() => setIsOpen(true), []);
     const onClose = useCallback(() => setIsOpen(false), []);
     const onSelect = useCallback((opt: string) => {
-        setOption(opt);
+        onSoundOptionChange(opt);
         logger.info(`Sound option selected: ${opt}`);
         // eslint-disable-next-line no-console
         console.log('Sound option selected:', opt);
         onClose();
-    }, [ onClose ]);
+    }, [ onClose, onSoundOptionChange ]);
 
     const getKey = (opt: string) => `toolbar.sound${opt.charAt(0).toUpperCase()}${opt.slice(1)}`;
 
@@ -77,7 +93,7 @@ function SoundSettingsPopup({ children, popupPlacement, t }: { children: React.R
                         accessibilityLabel = { t(getKey(opt)) }
                         key = { opt }
                         onClick = { () => onSelect(opt) }
-                        selected = { option === opt }
+                        selected = { soundOption === opt }
                         text = { t(getKey(opt)) } />
                 ))}
             </ContextMenuItemGroup>
@@ -101,13 +117,21 @@ function SoundSettingsPopup({ children, popupPlacement, t }: { children: React.R
     );
 }
 
-function SoundButton({ t, dispatch, i18n, tReady, popupPlacement }: IProps) {
+function SoundButton({ t, dispatch, i18n, tReady, popupPlacement, _soundOption }: IProps) {
     const onClick = useCallback(() => {
         // Handle click if needed
     }, []);
 
+    const onSoundOptionChange = useCallback((option: string) => {
+        dispatch(setSoundOption(option));
+    }, [dispatch]);
+
     return (
-        <SoundSettingsPopup popupPlacement={popupPlacement} t={t}>
+        <SoundSettingsPopup 
+            popupPlacement={popupPlacement} 
+            t={t}
+            soundOption={_soundOption || 'default'}
+            onSoundOptionChange={onSoundOptionChange}>
             <ToolboxButtonWithIcon
                 ariaControls = 'sound-settings-dialog'
                 ariaExpanded = { false }
@@ -137,9 +161,11 @@ function SoundButton({ t, dispatch, i18n, tReady, popupPlacement }: IProps) {
  */
 function mapStateToProps(state: IReduxState) {
     const { videoSpaceWidth } = state['features/base/responsive-ui'];
+    const toolboxState = state['features/toolbox'];
 
     return {
-        popupPlacement: videoSpaceWidth <= Number(SMALL_MOBILE_WIDTH) ? 'auto' : 'top-end'
+        popupPlacement: videoSpaceWidth <= Number(SMALL_MOBILE_WIDTH) ? 'auto' : 'top-end',
+        _soundOption: toolboxState?.soundOption || 'default'
     };
 }
 
