@@ -15,7 +15,7 @@ import ContextMenuItem from '../../../base/ui/components/web/ContextMenuItem';
 import ContextMenuItemGroup from '../../../base/ui/components/web/ContextMenuItemGroup';
 import logger from '../logger';
 
-const OPTIONS = ['default', 'equalpower', 'hrtf'];
+const OPTIONS = ['default', 'stereopanner', 'equalpower', 'hrtf'];
 
 interface IProps extends WithTranslation, AbstractButtonProps {
     /**

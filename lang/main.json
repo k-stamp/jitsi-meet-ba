@@ -1426,6 +1426,7 @@
         "shareaudio": "Share audio",
         "sound": "Sound",
         "soundDefault": "Default",
+        "soundStereopanner": "StereoPanner",
         "soundEqualpower": "Equalpower",
         "soundHrtf": "HRTF",
         "sharedvideo": "Share video",
