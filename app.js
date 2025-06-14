@@ -71,6 +71,7 @@ import './react';
 
 // Initialisiere den AudioContext früh in der App
 import { initAudioContext } from './react/features/base/media/audioContext';
+import './react/features/base/media/audioTestUtils';
 
 console.log('App wird gestartet - AudioContext wird initialisiert...');
 
@@ -78,6 +79,7 @@ console.log('App wird gestartet - AudioContext wird initialisiert...');
 try {
     initAudioContext();
     console.log('AudioContext erfolgreich in app.js initialisiert');
+    console.log('StereoPanner Test-Utils verfügbar! Tippe showTestCommands() in die Konsole.');
 } catch (error) {
     console.error('Fehler beim Initialisieren des AudioContext in app.js:', error);
 }

@@ -73,11 +73,13 @@ function SoundSettingsPopup({ children, popupPlacement, t, soundOption, onSoundO
     const onClose = useCallback(() => setIsOpen(false), []);
     const onSelect = useCallback((opt: string) => {
         onSoundOptionChange(opt);
-        logger.info(`Sound option selected: ${opt}`);
+        // logger.info(`Sound option selected: ${opt}`);
         // eslint-disable-next-line no-console
         console.log('Sound option selected:', opt);
         onClose();
     }, [ onClose, onSoundOptionChange ]);
+
+
 
     const getKey = (opt: string) => `toolbar.sound${opt.charAt(0).toUpperCase()}${opt.slice(1)}`;
 
