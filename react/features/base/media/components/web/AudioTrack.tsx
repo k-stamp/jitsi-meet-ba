@@ -6,6 +6,7 @@ import { sendAnalytics } from '../../../../analytics/functions';
 import { IReduxState } from '../../../../app/types';
 import { ITrack } from '../../../tracks/types';
 import logger from '../../logger';
+import { getAudioContext, connectAudioSource, disconnectAudioSource } from '../../audioContext';
 
 /**
  * The type of the React {@code Component} props of {@link AudioTrack}.
@@ -59,6 +60,16 @@ class AudioTrack extends Component<IProps> {
     _playTimeout: number | undefined;
 
     /**
+     * Reference to the MediaElementAudioSourceNode for WebAudio processing.
+     */
+    _audioSourceNode: MediaElementAudioSourceNode | null = null;
+
+    /**
+     * Flag to track if WebAudio processing is active.
+     */
+    _webAudioActive: boolean = false;
+
+    /**
      * Default values for {@code AudioTrack} component's properties.
      *
      * @static
@@ -82,6 +93,8 @@ class AudioTrack extends Component<IProps> {
         this._errorHandler = this._errorHandler.bind(this);
         this._ref = React.createRef();
         this._play = this._play.bind(this);
+        this._setupWebAudio = this._setupWebAudio.bind(this);
+        this._cleanupWebAudio = this._cleanupWebAudio.bind(this);
     }
 
 
@@ -121,6 +134,7 @@ class AudioTrack extends Component<IProps> {
      * @returns {void}
      */
     override componentWillUnmount() {
+        this._cleanupWebAudio();
         this._detachTrack(this.props.audioTrack);
 
         // @ts-ignore
@@ -140,6 +154,7 @@ class AudioTrack extends Component<IProps> {
         const nextJitsiTrack = nextProps.audioTrack?.jitsiTrack;
 
         if (currentJitsiTrack !== nextJitsiTrack) {
+            this._cleanupWebAudio();
             this._detachTrack(this.props.audioTrack);
             this._attachTrack(nextProps.audioTrack);
         }
@@ -216,6 +231,8 @@ class AudioTrack extends Component<IProps> {
             })
             .finally(() => {
                 this._play();
+                // Setup WebAudio processing after the track is attached and playing
+                setTimeout(() => this._setupWebAudio(), 100);
             });
     }
 
@@ -236,6 +253,77 @@ class AudioTrack extends Component<IProps> {
     }
 
     /**
+     * Sets up WebAudio processing for the remote audio track.
+     * Creates MediaElementAudioSourceNode and connects it through the AudioContext.
+     *
+     * @private
+     * @returns {void}
+     */
+    _setupWebAudio() {
+        const { id, participantId } = this.props;
+
+        if (!this._ref?.current || this._webAudioActive) {
+            return;
+        }
+
+        try {
+            const audioContext = getAudioContext();
+            
+            if (!audioContext) {
+                logger.warn(`AudioContext not available for remote audio ${id}`);
+                return;
+            }
+
+            // Create MediaElementAudioSourceNode from the HTML audio element
+            this._audioSourceNode = audioContext.createMediaElementSource(this._ref.current);
+            
+            // Connect through our AudioContext with PannerNode
+            connectAudioSource(this._audioSourceNode);
+            
+            this._webAudioActive = true;
+            
+            logger.info(`WebAudio processing activated for remote participant ${participantId}`, {
+                audioElementId: id,
+                participantId: participantId,
+                sourceNodeType: this._audioSourceNode.constructor.name
+            });
+
+        } catch (error) {
+            logger.error(`Failed to setup WebAudio for remote audio ${id}:`, error);
+            this._audioSourceNode = null;
+            this._webAudioActive = false;
+        }
+    }
+
+    /**
+     * Cleans up WebAudio processing.
+     * Disconnects and removes the MediaElementAudioSourceNode.
+     *
+     * @private
+     * @returns {void}
+     */
+    _cleanupWebAudio() {
+        if (!this._webAudioActive || !this._audioSourceNode) {
+            return;
+        }
+
+        try {
+            // Disconnect the audio source from our AudioContext
+            disconnectAudioSource(this._audioSourceNode);
+            
+            this._audioSourceNode = null;
+            this._webAudioActive = false;
+            
+            logger.info(`WebAudio processing deactivated for remote participant ${this.props.participantId}`, {
+                audioElementId: this.props.id
+            });
+
+        } catch (error) {
+            logger.error(`Failed to cleanup WebAudio for remote audio ${this.props.id}:`, error);
+        }
+    }
+
+    /**
      * Reattaches the audio track to the underlying HTMLAudioElement when an 'error' event is fired.
      *
      * @param {Error} error - The error event fired on the HTMLAudioElement.
@@ -244,6 +332,7 @@ class AudioTrack extends Component<IProps> {
     _errorHandler(error: Error) {
         logger.error(`Error ${error?.message} called on audio track ${this.props.audioTrack?.jitsiTrack}. `
             + 'Attempting to reattach the audio track to the element and execute play on it');
+        this._cleanupWebAudio();
         this._detachTrack(this.props.audioTrack);
         this._attachTrack(this.props.audioTrack);
     }

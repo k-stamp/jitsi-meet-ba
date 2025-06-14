@@ -209,6 +209,28 @@ export function connectAudioSource(sourceNode: AudioNode): void {
 }
 
 /**
+ * Trennt eine Audio-Quelle vom AudioContext
+ * @param sourceNode - Die Audio-Quelle die getrennt werden soll
+ */
+export function disconnectAudioSource(sourceNode: AudioNode): void {
+    try {
+        // Disconnect from all destinations
+        sourceNode.disconnect();
+        
+        // Remove from tracked sources
+        connectedSources.delete(sourceNode);
+        
+        logger.info('Audio-Quelle erfolgreich getrennt', {
+            sourceNodeType: sourceNode.constructor.name,
+            remainingConnections: connectedSources.size
+        });
+    } catch (error) {
+        logger.error('Fehler beim Trennen der Audio-Quelle:', error);
+        throw error;
+    }
+}
+
+/**
  * Trennt alle verbundenen Audio-Quellen
  * @private
  */
